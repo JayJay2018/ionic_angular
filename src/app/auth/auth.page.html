@@ -1,0 +1,49 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>You better {{isLogin ? 'login' : 'signup'}}, bitch!</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="authForm">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="12" size-sm="6" offset-sm="3">
+          <ion-list>
+            <ion-item>
+              <ion-label position="floating">E-Mail</ion-label>
+              <ion-input type="email" formControlName="email" required></ion-input>
+            </ion-item>
+            <ion-item *ngIf="!authForm.get('email').valid && authForm.get('email').touched ">
+              <ion-label>Should be a valid email.</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label position="floating">Password</ion-label>
+              <ion-input type="password" formControlName="password" required></ion-input>
+            </ion-item>
+            <ion-item *ngIf="!authForm.get('password').valid && authForm.get('password').touched ">
+              <ion-label>Should be at least 3 characters long.</ion-label>
+            </ion-item>
+          </ion-list>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12" size-sm="6" offset-sm="3">
+            <ion-button (click)="onLogin(authForm)" expand="block" [disabled]="!authForm.valid">{{ isLogin ? 'Login' : 'Signup'}}</ion-button>
+              <ion-button type="button" expand="block" fill="outline" color="tertiary" (click)="toggleAuthMode()">Switch to {{ isLogin ? 'Signup' : 'Login'}}</ion-button>
+              <!-- <ion-button type="submit" expand="block" [disabled]="!authForm.valid">Submit</ion-button> -->
+            <div class="ion-text-center">
+              <ion-spinner *ngIf="isLoading" name="dots"></ion-spinner>  
+            </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>  
+  </form>
+  <ion-row>
+    <ion-col>
+      <div>{{authForm.value | json}}</div>
+      <br>
+      <div>{{authForm.status}}</div>
+    </ion-col>
+  </ion-row>
+  </ion-content>

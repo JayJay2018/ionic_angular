@@ -22,7 +22,7 @@
       </ion-col>
     </ion-row>
   </ion-grid>
-  <ion-grid *ngIf="!isLoading && loadedBookings.length > 0">
+  <ion-grid *ngIf="!isLoading && loadedBookings && loadedBookings.length > 0">
     <ion-row>
       <ion-col 
       size-sm="6" 
@@ -30,6 +30,9 @@
         <ion-list>
           <ion-item-sliding *ngFor="let booking of loadedBookings" #slidingBooking>
             <ion-item>
+              <ion-avatar class="margin-right">
+                <ion-img [src]="booking.placeImage"></ion-img>
+              </ion-avatar>
               <ion-label>
                 <h5>{{ booking.placeTitle }}</h5>
                 <p>Guests: {{ booking.guestNumber }}</p>

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
-import { LoadingController } from '@ionic/angular';
+import { LoadingController, AlertController } from '@ionic/angular';
 import { FormBuilder, Validators, NgForm } from '@angular/forms';
 
 @Component({
@@ -13,8 +13,8 @@ export class AuthPage implements OnInit {
   isLoading = false;
   isLogin = true;
   authForm = this.fb.group({
-    email: ['lol@', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(3)]]
+    email: [null, [Validators.required, Validators.email]],
+    password: [null, [Validators.required, Validators.minLength(3)]]
 
   })
   
@@ -22,18 +22,14 @@ export class AuthPage implements OnInit {
     private authService: AuthService,
     private router: Router,
     private loadingCtrl: LoadingController,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private alertCtrl: AlertController
   ) { }
 
   ngOnInit() {
-    console.log(this.authForm.get('email').value);
   }
 
-  onLogin(form: NgForm) {
-    if (!form.valid) {
-      return;
-    }
-    console.log(form);
+  authenticate(email: string, password: string) {
     this.isLoading = true;
     this.authService.login();
     this.loadingCtrl.create({
@@ -42,23 +38,47 @@ export class AuthPage implements OnInit {
     })
     .then( loadingEl => {
       loadingEl.present();
-      setTimeout( () => {
+      this.authService.signUp(email, password)
+        .subscribe( (resData) => {
+        console.log(resData);
         this.isLoading = false;
         loadingEl.dismiss();
         this.router.navigateByUrl('/places/tabs/discover');
-      }, 1500)
+     },
+     errorRes => {
+      loadingEl.dismiss();
+      this.isLoading = false;
+      const code = errorRes.error.error.message;
+      let message = 'We are sorry, but authentication failed.'
+      if (code === 'EMAIL_EXISTS') {
+        message = 'Email exists already.'
+      }
+      this.showAlert(message);
+     });
     })
   }
 
-  // onSubmit(form: NgForm) {
-  //   if (!form.valid) {
-  //     return;
-  //   }
-  //   console.log(form);
-  // }
+  onSubmit(form: NgForm) {
+    if (!form.valid) {
+      return;
+    }
+    const email = form.value.email;
+    const password = form.value.password;
+    this.authenticate(email, password);
+  }
 
   toggleAuthMode() {
     this.isLogin = !this.isLogin;
+  }
+
+  private showAlert(message: string) {
+    this.alertCtrl.create({
+      header: 'An error occured',
+      message: message,
+      buttons: ['Ok']
+    }).then(loadingEl => {
+      loadingEl.present();
+    })
   }
 
 }

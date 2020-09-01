@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { PlacesService } from '../../places.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NavController, ModalController, ActionSheetController, LoadingController } from '@ionic/angular';
+import { NavController, ModalController, ActionSheetController, LoadingController, AlertController } from '@ionic/angular';
 import { Place } from '../../place.model';
 import { CreateBookingComponent } from '../../../bookings/create-booking/create-booking.component';
 import { Subscription } from 'rxjs';
@@ -17,6 +17,7 @@ import { AuthService } from '../../../auth/auth.service';
 export class PlaceDetailPage implements OnInit, OnDestroy {
   place: Place;
   isBookable: boolean = false;
+  isLoading: boolean = false;
   private placesSub: Subscription;
   constructor(
     private placesService: PlacesService,
@@ -27,7 +28,8 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     private bookingsService: BookingsService,
     private loadingCtrl: LoadingController,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private alertCtrl: AlertController
   ) { }
 
   ngOnInit() {
@@ -36,11 +38,28 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
         this.navCtrl.navigateBack('/places/tabs/discover');
         return;
       }
+      this.isLoading = true;
       this.placesSub = this.placesService
       .getPlace(paramMap.get('placeId'))
       .subscribe( place => {
         this.place = place;
         this.isBookable = place.userId !== this.authService.userId;
+        this.isLoading = false;
+      },
+      error => {
+        this.alertCtrl.create({
+          header: 'Something went wront.',
+          message: 'Place could not be found.',
+          buttons: [{
+            text: 'Ok',
+            handler: () => {
+              this.router.navigate(['/places/tabs/discover'])
+            }
+          }]
+        })
+        .then( loadingEl => {
+          loadingEl.present();
+        })
       });
     })
   }

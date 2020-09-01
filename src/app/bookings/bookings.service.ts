@@ -1,8 +1,21 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { take, delay, tap } from 'rxjs/operators';
+import { take, delay, tap, switchMap, map } from 'rxjs/operators';
 import { Booking } from './booking.model';
 import { AuthService } from '../auth/auth.service';
+import { HttpClient } from '@angular/common/http';
+
+interface BookingData {
+  bookedFrom: string;
+  bookedTo: string;
+  firstName: string;
+  guestNumber: number;
+  lastName: string;
+  placeId: string;
+  placeImage: string;
+  placeTitle: string;
+  userId: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +28,8 @@ export class BookingsService {
   }
 
   constructor(
-    private authService: AuthService
+    private authService: AuthService,
+    private http: HttpClient
   ) { }
 
   addBooking(
@@ -28,6 +42,7 @@ export class BookingsService {
     dateFrom: Date,
     dateTo: Date
   ) {
+    let generatedId: string;
     const newBooking = new Booking(
       Math.random().toString(),
       placeId,
@@ -40,13 +55,19 @@ export class BookingsService {
       dateFrom,
       dateTo
     );
-    return this.bookings.pipe(
+    return this.http.post<{name: string}>('https://ionic-angular-jascha.firebaseio.com/bookings.json', 
+    { ...newBooking, id: null
+    }).pipe(
+      switchMap( resData => {
+        generatedId = resData.name;
+        return this.bookings;
+      }),
       take(1),
-      delay(1000),
       tap( bookings => {
-        this._bookings.next(bookings.concat(newBooking));
+        newBooking.id = generatedId;
+        this._bookings.next(bookings.concat(newBooking))
       })
-    )
+      )
   }
 
   cancelBooking(bookingId: string) {
@@ -57,5 +78,33 @@ export class BookingsService {
         this._bookings.next(bookings.filter(b => b.id !== bookingId));
       })
     )
+  }
+
+  fetchBookings() {
+    return this.http.get<BookingData>(`https://ionic-angular-jascha.firebaseio.com/bookings.json?orderBy="userId"&equalTo="${this.authService.userId}"`)
+    .pipe(map(bookingData => {
+      console.log(bookingData);
+      const bookings = [];
+      for(const key in bookingData) {
+        if (bookingData.hasOwnProperty(key)) {
+          bookings.push(new Booking(
+            key,
+            bookingData[key].placeId,
+            bookingData[key].userId,
+            bookingData[key].placeTitle,
+            bookingData[key].placeImage,
+            bookingData[key].firstName,
+            bookingData[key].lastName,
+            bookingData[key].guestNumber,
+            new Date(bookingData[key].bookedFrom),
+            new Date(bookingData[key].bookedTo)
+          ))
+        }
+      }
+      return bookings;
+    }),
+    tap(bookings => {
+      this._bookings.next(bookings)
+    }))
   }
 }

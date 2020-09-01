@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Place } from '../../place.model';
 import { PlacesService } from '../../places.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NavController, LoadingController } from '@ionic/angular';
+import { NavController, LoadingController, AlertController } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
@@ -17,6 +17,8 @@ export class EditOfferPage implements OnInit, OnDestroy {
   private placesSub: Subscription;
   startDate;
   endDate;
+  isLoading: boolean = false;
+  placeId: string;
 
   constructor(
     private placesService: PlacesService,
@@ -24,7 +26,8 @@ export class EditOfferPage implements OnInit, OnDestroy {
     private navCtrl: NavController,
     private fb: FormBuilder,
     private loadingCtrl: LoadingController,
-    private router: Router
+    private router: Router,
+    private alertCtrl: AlertController
   ) { }
 
   ngOnInit() {
@@ -33,6 +36,8 @@ export class EditOfferPage implements OnInit, OnDestroy {
         this.navCtrl.navigateBack('/places/tabs/offers')
         return;
       }
+      this.placeId = paramMap.get('placeId');
+      this.isLoading = true;
       this.placesSub = this.placesService
       .getPlace(paramMap.get('placeId'))
       .subscribe( place => { 
@@ -44,6 +49,24 @@ export class EditOfferPage implements OnInit, OnDestroy {
           dateFrom: [this.place.availableFrom.toISOString(), Validators.required],
           dateTo: [this.place.availableTo.toISOString(), Validators.required]
           
+        })
+        this.isLoading = false;
+      },
+      error => {
+        this.alertCtrl.create({
+          header: 'Oops, something went wront.',
+          message: 'This place does not exist.',
+          buttons: [
+            {
+              text: 'Okay',
+              handler: () => {
+                this.router.navigate(['/places/tabs/offers'])
+              }}
+          ]
+
+        })
+        .then( loadingEl => {
+          loadingEl.present();
         })
       });
     })

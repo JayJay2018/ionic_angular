@@ -3,6 +3,7 @@ import { Place } from '../place.model';
 import { PlacesService } from '../places.service';
 import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
+import { take, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-discover',
@@ -48,15 +49,18 @@ export class DiscoverPage implements OnInit, OnDestroy {
 
   onFilterUpdate(event: any) {
     console.log(event);
-    if (event.detail.value === 'all') {
-      this.relevantPlaces = this.loadedPlaces;
-      this.listedLoadedPlaces = this.relevantPlaces.slice(1);
-    } else {
-      this.relevantPlaces = this.loadedPlaces.filter(
-        place => place.userId !== this.authService.userId
-      );
-      this.listedLoadedPlaces = this.relevantPlaces.slice(1);
-    } 
+    this.authService.userId.pipe(take(1))
+    .subscribe(userId => {
+      if (event.detail.value === 'all') {
+        this.relevantPlaces = this.loadedPlaces;
+        this.listedLoadedPlaces = this.relevantPlaces.slice(1);
+      } else {
+        this.relevantPlaces = this.loadedPlaces.filter(
+          place => place.userId !== userId
+        );
+        this.listedLoadedPlaces = this.relevantPlaces.slice(1);
+      } 
+    })
   }
 
 }

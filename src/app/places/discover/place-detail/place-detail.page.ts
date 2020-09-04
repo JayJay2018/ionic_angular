@@ -7,6 +7,7 @@ import { CreateBookingComponent } from '../../../bookings/create-booking/create-
 import { Subscription } from 'rxjs';
 import { BookingsService } from '../../../bookings/bookings.service';
 import { AuthService } from '../../../auth/auth.service';
+import { switchMap } from 'rxjs/operators';
 
 
 @Component({
@@ -38,17 +39,24 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
         this.navCtrl.navigateBack('/places/tabs/discover');
         return;
       }
-      this.isLoading = true;
-      this.placesSub = this.placesService
-      .getPlace(paramMap.get('placeId'))
+      let fetchedUserId: string;
+      this.authService.userId.pipe(switchMap( userId => {
+        if (!userId) {
+          throw Error ('No user id found.')
+        }
+        fetchedUserId = userId;
+        this.isLoading = true;
+        return this.placesService
+        .getPlace(paramMap.get('placeId'))
+      }))
       .subscribe( place => {
         this.place = place;
-        this.isBookable = place.userId !== this.authService.userId;
+        this.isBookable = place.userId !== fetchedUserId;
         this.isLoading = false;
       },
       error => {
         this.alertCtrl.create({
-          header: 'Something went wront.',
+          header: 'Something went wrong.',
           message: 'Place could not be found.',
           buttons: [{
             text: 'Ok',

@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { AuthService } from './auth.service';
+import { AuthService, AUTHRESTDATA } from './auth.service';
 import { Router } from '@angular/router';
 import { LoadingController, AlertController } from '@ionic/angular';
 import { FormBuilder, Validators, NgForm } from '@angular/forms';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-auth',
@@ -31,15 +32,19 @@ export class AuthPage implements OnInit {
 
   authenticate(email: string, password: string) {
     this.isLoading = true;
-    this.authService.login();
     this.loadingCtrl.create({
       keyboardClose: true,
       message: 'Logging in...'
     })
     .then( loadingEl => {
       loadingEl.present();
-      this.authService.signUp(email, password)
-        .subscribe( (resData) => {
+      let authObs: Observable<AUTHRESTDATA>
+      if (this.isLogin) {
+        authObs = this.authService.login(email, password);
+      } else {
+        authObs = this.authService.signUp(email, password);
+      }
+      authObs.subscribe( (resData) => {
         console.log(resData);
         this.isLoading = false;
         loadingEl.dismiss();
@@ -52,6 +57,10 @@ export class AuthPage implements OnInit {
       let message = 'We are sorry, but authentication failed.'
       if (code === 'EMAIL_EXISTS') {
         message = 'Email exists already.'
+      } else if (code === 'EMAIL_NOT_FOUND') {
+        message = 'Email does not exist.'
+      } else if (code === 'INVALID_PASSWORD') {
+        message = 'Email or password invalid.'
       }
       this.showAlert(message);
      });
@@ -73,7 +82,7 @@ export class AuthPage implements OnInit {
 
   private showAlert(message: string) {
     this.alertCtrl.create({
-      header: 'An error occured',
+      header: 'Something went wrong...',
       message: message,
       buttons: ['Ok']
     }).then(loadingEl => {

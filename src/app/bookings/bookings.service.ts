@@ -91,8 +91,9 @@ export class BookingsService {
       if (!userId) {
         throw Error ('User not found.')
       }
-      return this.http.get<BookingData>(`https://ionic-angular-jascha.firebaseio.com/bookings.json?orderBy="userId"&equalTo="
-      ${userId}"`)
+      console.log(userId);
+      return this.http.get<{[key: string]: BookingData}>
+      (`https://ionic-angular-jascha.firebaseio.com/bookings.json?orderBy="userId"&equalTo="${userId}"`)
     }),  
     map(bookingData => {
       console.log(bookingData);

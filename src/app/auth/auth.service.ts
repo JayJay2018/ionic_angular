@@ -4,6 +4,7 @@ import { environment } from 'src/environments/environment';
 import { BehaviorSubject } from 'rxjs';
 import { User } from './user.model';
 import { map, tap } from 'rxjs/operators';
+import { Plugins } from '@capacitor/core';
 
 
 export interface AUTHRESTDATA {
@@ -78,5 +79,19 @@ export class AuthService {
       userData.email, 
       userData.idToken, 
       expirationDateTime))
+
+    this.storeAuthData(
+      userData.localId, 
+      userData.idToken, 
+      expirationDateTime.toISOString())
+  }
+
+  private storeAuthData(userId: string, token: string, tokenExpirationDate: string) {
+    const data = JSON.stringify({
+      userId: userId,
+      token: token,
+      tokenExpirationDate: tokenExpirationDate
+    });
+    Plugins.Storage.set({key: 'authData', value: data})
   }
 }

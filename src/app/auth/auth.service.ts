@@ -21,15 +21,17 @@ export interface AUTHRESTDATA {
 export class AuthService {
   private _user = new BehaviorSubject<User>(null)
 
-  get userIsAthenticated() {
+  get userIsAuthenticated() {
     return this._user.asObservable().pipe(map( user => {
       if (user) {
+        console.log('user', user)
         return !!user.token;  
       }
       return false;
     })
       );
   }
+
 
   get userId() {
     return this._user.asObservable().pipe(map( user => {
@@ -70,10 +72,11 @@ export class AuthService {
 
   private setUserData(userData: AUTHRESTDATA) {
     const expirationDateTime = new Date(new Date().getTime() + +userData.expiresIn * 1000);
-    const newUser = new User(
+    
+    this._user.next(new User(
       userData.localId, 
       userData.email, 
       userData.idToken, 
-      expirationDateTime)
+      expirationDateTime))
   }
 }

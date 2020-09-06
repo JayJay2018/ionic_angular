@@ -50,11 +50,14 @@ export class AuthService {
   ) { }
 
 autoLogin() {
-  return from(Plugins.Storage.get({ key: 'authData'})).pipe(map( storedData => {
+  return from(Plugins.Storage.get({ key: 'authData'}))
+  .pipe(
+    map( storedData => {
     if (!storedData || !storedData.value) {
       return null;
     }
     const parsedData = JSON.parse(storedData.value) as {token: string, email: string, userId: string, tokenExpirationDate: string};
+    console.log('storedData', parsedData)
     const expirationTime = new Date(parsedData.tokenExpirationDate);
     if (expirationTime <= new Date()) {
       return null
@@ -62,14 +65,14 @@ autoLogin() {
     const user = new User(parsedData.userId, parsedData.email, parsedData.token, expirationTime)
     return user;
   }),
-  tap( user => {
-    if (user) {
-      this._user.next(user);
-    }
-  }), 
-  map( user => {
-    return !!user;
-  }))
+    tap( user => {
+      if (user) {
+        this._user.next(user);
+      }
+    }), 
+    map( user => {
+      return !!user;
+    }))
 }
 
   signUp(email: string, password: string) {
@@ -104,10 +107,10 @@ autoLogin() {
       expirationDateTime))
 
     this.storeAuthData(
-      userData.localId, 
+      userData.localId,
+      userData.email, 
       userData.idToken, 
-      expirationDateTime.toISOString(),
-      userData.email)
+      expirationDateTime.toISOString())
   }
 
   private storeAuthData(userId: string, email: string, token: string, tokenExpirationDate: string) {

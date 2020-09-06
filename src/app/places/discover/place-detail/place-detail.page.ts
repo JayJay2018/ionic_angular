@@ -7,7 +7,7 @@ import { CreateBookingComponent } from '../../../bookings/create-booking/create-
 import { Subscription } from 'rxjs';
 import { BookingsService } from '../../../bookings/bookings.service';
 import { AuthService } from '../../../auth/auth.service';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 
 
 @Component({
@@ -40,7 +40,7 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
         return;
       }
       let fetchedUserId: string;
-      this.authService.userId.pipe(switchMap( userId => {
+      this.authService.userId.pipe(take(1), switchMap( userId => {
         if (!userId) {
           throw Error ('No user id found.')
         }

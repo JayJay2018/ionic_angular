@@ -4,6 +4,8 @@ import { PlacesService } from '../places.service';
 import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
 import { take, map } from 'rxjs/operators';
+import { AlertController } from '@ionic/angular';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-discover',
@@ -18,7 +20,9 @@ export class DiscoverPage implements OnInit, OnDestroy {
   private placesSub: Subscription;
   constructor(
     private placesService: PlacesService,
-    private authService: AuthService
+    private authService: AuthService,
+    private alertCtrl: AlertController,
+    private router: Router
   ) { }
 
   ngOnInit() {
@@ -34,6 +38,14 @@ export class DiscoverPage implements OnInit, OnDestroy {
     this.placesService.fetchPLaces()
     .subscribe( () => {
       this.isLoading = false;
+    },
+    errorRes => {
+      let message = "Some bad error happend here..."
+      console.error('error', errorRes);
+      if (errorRes.error.error = 'Permission denied') {
+        message = 'You are not authorised for this action.'
+        this.showAlert(message);
+      }
     });
   }
 
@@ -60,6 +72,23 @@ export class DiscoverPage implements OnInit, OnDestroy {
         );
         this.listedLoadedPlaces = this.relevantPlaces.slice(1);
       } 
+    })
+  }
+
+  private showAlert(message: string) {
+    this.alertCtrl.create({
+      header: 'Something unexpected happened...',
+      message: message,
+      buttons: [
+        {
+          text: 'Ok', 
+          handler: () => {
+            this.router.navigateByUrl('/auth');
+          }
+        }]
+    })
+    .then(loadingEl => {
+      loadingEl.present();
     })
   }
 

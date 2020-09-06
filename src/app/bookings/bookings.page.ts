@@ -22,6 +22,9 @@ export class BookingsPage implements OnInit, OnDestroy {
     this.bookingSub = this.bookingsService.bookings.subscribe( bookings => {
       this.loadedBookings = bookings;
       // console.log(this.loadedBookings)
+    },
+    error => {
+      console.error('error', error);
     }) 
   }
 
@@ -30,6 +33,9 @@ export class BookingsPage implements OnInit, OnDestroy {
     this.bookingsService.fetchBookings()
     .subscribe( () => {
       this.isLoading = false;
+    },
+    error => {
+      console.error('error', error)
     });
   }
 

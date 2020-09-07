@@ -41,10 +41,12 @@ export class DiscoverPage implements OnInit, OnDestroy {
     },
     errorRes => {
       let message = "Some bad error happend here..."
+      let header = 'An error occurred...'
       console.error('error', errorRes);
       if (errorRes.error.error = 'Permission denied') {
         message = 'You are not authorised for this action.'
-        this.showAlert(message);
+        header = 'Sorry, something went wrong...'
+        this.showAlert(message, header);
       }
     });
   }
@@ -75,15 +77,15 @@ export class DiscoverPage implements OnInit, OnDestroy {
     })
   }
 
-  private showAlert(message: string) {
+  private showAlert(message: string, header: string) {
     this.alertCtrl.create({
-      header: 'Something unexpected happened...',
+      header: header,
       message: message,
       buttons: [
         {
           text: 'Ok', 
           handler: () => {
-            this.router.navigateByUrl('/auth');
+            this.authService.logout();
           }
         }]
     })

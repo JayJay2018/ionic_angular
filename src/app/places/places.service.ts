@@ -74,8 +74,11 @@ export class PlacesService {
   }
 
   fetchPLaces() {
-    return this.http.get<{[key: string]: PLACEDATA}>('https://ionic-angular-jascha.firebaseio.com/offered-places.json')
-    .pipe(map(resData => {
+    return this.authService.token.pipe(take(1), switchMap( userToken => {
+      return this.http.get<{[key: string]: PLACEDATA}>(`https://ionic-angular-jascha.firebaseio.com/offered-places.json?auth=${userToken}`
+      );
+    }),
+    map(resData => {
       const places = []
       console.log(resData);
       for (const key in resData) {
@@ -101,8 +104,10 @@ export class PlacesService {
   }
 
   getPlace(id: string) {
-    return this.http.get<PLACEDATA>(`https://ionic-angular-jascha.firebaseio.com/offered-places/${id}.json`)
-      .pipe(map(placeData => {
+    return this.authService.token.pipe(take(1), switchMap(userToken => {
+      return this.http.get<PLACEDATA>(`https://ionic-angular-jascha.firebaseio.com/offered-places/${id}.json?auth=${userToken}`)
+    }),
+      map(placeData => {
         return new Place(
           id, 
           placeData.title, 
@@ -112,27 +117,31 @@ export class PlacesService {
           new Date(placeData.availableFrom), 
           new Date(placeData.availableTo), 
           placeData.userId)
-      }))
+      })
+    );
   }
 
   addPlace(title: string, description: string, price: number, dateFrom: Date, dateTo: Date) {
     let generatedId: string;
+    let fetchedUserId: string;
     let fetchedNewPlace: Place;
     return this.authService.userId.pipe(take(1), switchMap(userId => {
-      fetchedNewPlace = new Place(
-       Math.random().toString(),
-       title,
-       description,
-       'https://lonelyplanetimages.imgix.net/mastheads/GettyImages-538096543_medium.jpg?sharp=10&vib=20&w=1200',
-       price,
-       dateFrom,
-       dateTo,
-       userId
-     );
-     return this.http.post<{ name: string}>('https://ionic-angular-jascha.firebaseio.com/offered-places.json', {
-       ...fetchedNewPlace, id: null
-     })
-
+      fetchedUserId = userId;
+      return this.authService.token.pipe(take(1), switchMap(userToken => {
+        fetchedNewPlace = new Place(
+         Math.random().toString(),
+         title,
+         description,
+         'https://lonelyplanetimages.imgix.net/mastheads/GettyImages-538096543_medium.jpg?sharp=10&vib=20&w=1200',
+         price,
+         dateFrom,
+         dateTo,
+         userId
+       );
+       return this.http.post<{ name: string}>(`https://ionic-angular-jascha.firebaseio.com/offered-places.json?auth=${userToken}`, {
+         ...fetchedNewPlace, id: null
+       })
+      }))
     }),
       switchMap( resData => {
         generatedId = resData.name;
@@ -144,13 +153,6 @@ export class PlacesService {
       this._places.next(places.concat(fetchedNewPlace))
     })
     )
-    // return this.places.pipe(
-    //   take(1), 
-    //   delay(1000),
-    //   tap( places => {
-    //     this._places.next(places.concat(newPlace)) 
-    //   })
-    // )
   }
 
     updatePlace(placeId: string, title: string, description: string, dateFrom: Date, dateTo: Date) {

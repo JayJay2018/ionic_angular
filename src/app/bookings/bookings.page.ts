@@ -34,8 +34,8 @@ export class BookingsPage implements OnInit, OnDestroy {
     .subscribe( () => {
       this.isLoading = false;
     },
-    error => {
-      console.error('error', error)
+    errorRes => {
+      console.error('error', errorRes)
     });
   }
 

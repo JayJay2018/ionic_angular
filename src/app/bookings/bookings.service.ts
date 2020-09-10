@@ -44,24 +44,28 @@ export class BookingsService {
   ) {
     let generatedId: string;
     let newBooking: Booking;
+    let fetchedUserId: string;
     return this.authService.userId.pipe(take(1), switchMap(userId => {
       if (!userId) {
         throw Error ('No user id found.');
       }
-      newBooking = new Booking(
-        Math.random().toString(),
-        placeId,
-        userId,
-        placeTitle,
-        placeImage,
-        firstName,
-        lastName,
-        guestNumber,
-        dateFrom,
-        dateTo
-      );
-      return this.http.post<{name: string}>('https://ionic-angular-jascha.firebaseio.com/bookings.json', 
-      {...newBooking, id: null})
+      fetchedUserId = userId;
+      return this.authService.token.pipe(take(1), switchMap( userToken => {
+        newBooking = new Booking(
+          Math.random().toString(),
+          placeId,
+          fetchedUserId,
+          placeTitle,
+          placeImage,
+          firstName,
+          lastName,
+          guestNumber,
+          dateFrom,
+          dateTo
+        );
+        return this.http.post<{name: string}>(`https://ionic-angular-jascha.firebaseio.com/bookings.json?auth=${userToken}`, 
+        {...newBooking, id: null})
+        }))
       }), 
       switchMap( resData => {
         generatedId = resData.name;
@@ -75,25 +79,31 @@ export class BookingsService {
   }
 
   cancelBooking(bookingId: string) {
-    return this.http.delete(`https://ionic-angular-jascha.firebaseio.com/bookings/${bookingId}.json`)
-    .pipe(switchMap( () => {
-      // console.log('deleted');
-      return this.bookings;
-    }),
-    take(1),
-    tap(bookings => {
-      this._bookings.next(bookings.filter(b => b.id !== bookingId));
+    return this.authService.token.pipe(take(1), switchMap( userToken => {
+      return this.http.delete(`https://ionic-angular-jascha.firebaseio.com/bookings/${bookingId}.json?auth=${userToken}`)
+      .pipe(switchMap( () => {
+        // console.log('deleted');
+        return this.bookings;
+      }),
+      take(1),
+      tap(bookings => {
+        this._bookings.next(bookings.filter(b => b.id !== bookingId));
+      }))
     }))
   }
 
   fetchBookings() {
+    let fetchedUserId: string;
     return this.authService.userId.pipe(take(1), switchMap(userId => {
       if (!userId) {
         throw Error ('User not found.')
       }
-      console.log(userId);
-      return this.http.get<{[key: string]: BookingData}>
-      (`https://ionic-angular-jascha.firebaseio.com/bookings.json?orderBy="userId"&equalTo="${userId}"`)
+      fetchedUserId = userId;
+      return this.authService.token.pipe(take(1), switchMap( userToken => {
+        console.log(userId);
+        return this.http.get<{[key: string]: BookingData}>
+        (`https://ionic-angular-jascha.firebaseio.com/bookings.json?orderBy="userId"&equalTo="${fetchedUserId}"&auth=${userToken}`)
+      }))
     }),  
     map(bookingData => {
       console.log(bookingData);

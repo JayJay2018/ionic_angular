@@ -157,6 +157,7 @@ export class PlacesService {
 
     updatePlace(placeId: string, title: string, description: string, dateFrom: Date, dateTo: Date) {
       let updatedPlaces: Place[];
+      let fetchedUserToken: string;
       return this.places.pipe(
         take(1),
         switchMap( places => {
@@ -167,22 +168,24 @@ export class PlacesService {
           }
         }),
         switchMap( places => {
-          const updatedPlacesIndex = places.findIndex( place => place.id == placeId);
-          updatedPlaces = [...places];
-          const oldPlace = updatedPlaces[updatedPlacesIndex];
-          updatedPlaces[updatedPlacesIndex] = new Place(
-            oldPlace.id,
-            title,
-            description,
-            oldPlace.imageUrl,
-            oldPlace.price,
-            dateFrom,
-            dateTo,
-            oldPlace.userId
-          );
-           return this.http.put(`https://ionic-angular-jascha.firebaseio.com/offered-places/${placeId}.json`, 
-           {...updatedPlaces[updatedPlacesIndex], id: null}
-           );
+          return this.authService.token.pipe(take(1), switchMap( userToken => {
+            const updatedPlacesIndex = places.findIndex( place => place.id == placeId);
+            updatedPlaces = [...places];
+            const oldPlace = updatedPlaces[updatedPlacesIndex];
+            updatedPlaces[updatedPlacesIndex] = new Place(
+              oldPlace.id,
+              title,
+              description,
+              oldPlace.imageUrl,
+              oldPlace.price,
+              dateFrom,
+              dateTo,
+              oldPlace.userId
+            );
+             return this.http.put(`https://ionic-angular-jascha.firebaseio.com/offered-places/${placeId}.json?auth=${userToken}`, 
+             {...updatedPlaces[updatedPlacesIndex], id: null}
+             );
+          }))
         }),
         tap( () => {
           this._places.next(updatedPlaces);

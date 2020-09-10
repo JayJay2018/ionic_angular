@@ -143,6 +143,19 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
           ).subscribe( () => {
             loadingEl.dismiss();
             this.router.navigate(['/bookings'])
+          },
+          // refactor and use global approach
+          errorRes => {
+            console.log(errorRes);
+            loadingEl.dismiss();
+            this.alertCtrl.create({
+              header: 'Someting went wrong',
+              message: 'You are not authorised',
+              buttons: ['Ok']
+            })
+            .then(loadingEl => {
+              loadingEl.present();
+            })
           })
         })
         

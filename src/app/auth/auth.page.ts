@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService, AUTHRESTDATA } from './auth.service';
 import { Router } from '@angular/router';
 import { LoadingController, AlertController } from '@ionic/angular';
-import { FormBuilder, Validators, NgForm } from '@angular/forms';
+import { FormBuilder, Validators, NgForm, FormGroup } from '@angular/forms';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -67,7 +67,7 @@ export class AuthPage implements OnInit {
     })
   }
 
-  onSubmit(form: NgForm) {
+  onSubmit(form: FormGroup) {
     if (!form.valid) {
       return;
     }
